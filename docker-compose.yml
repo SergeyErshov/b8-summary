@@ -1,0 +1,36 @@
+version: "3.1"
+
+services:
+  nginx:
+    image: "nginx:alpine"
+    networks:
+      - "localnet"
+    extra_hosts:
+      - "nginx:127.0.0.1"
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./www:/var/www
+    restart: "unless-stopped"
+  
+  php:
+    build: .
+    networks:
+      - "localnet"
+    extra_hosts:
+      - "php:127.0.0.1"
+    volumes:
+      - ./www:/var/www
+    restart: "unless-stopped"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -Ls http://nginx | grep works"]
+      interval: 5s
+      timeout: 5s
+      retries: 2
+    depends_on:
+      - nginx
+
+networks:
+  localnet:
+    driver: bridge
